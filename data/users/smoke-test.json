@@ -1,0 +1,49 @@
+{
+  "user_id": "smoke-test",
+  "profile": {
+    "history": [
+      "I need men black running shoes under $150",
+      "more soft one"
+    ],
+    "budget_max": 150.0,
+    "category": "running",
+    "gender": "men",
+    "color_preferences": [
+      "black"
+    ],
+    "width_need": null,
+    "objectives": {
+      "softness": 1.0,
+      "premium": 0.0,
+      "lightweight": 0.0,
+      "support": 0.0
+    },
+    "preferred_shelves": [],
+    "rejected_product_ids": [],
+    "last_recommended_ids": [
+      "NB-880V14-M",
+      "NB-860V13",
+      "NB-1080V13-M",
+      "NB-FUELCELL-REBEL",
+      "NB-SC-TRAINER"
+    ],
+    "transition_label": "add",
+    "transition_reason": "activated a new leading priority: softness"
+  },
+  "chat_messages": [
+    {
+      "role": "user",
+      "content": "I need men black running shoes under $150"
+    },
+    {
+      "role": "assistant",
+      "content": "Top pick: Fresh Foam 880v14 with KeepScore 88.8. It rose because your active priorities now emphasize softness for men shoppers, and its fit confidence is 0.93 with return risk 0.07. Evidence: Often described as a dependable men's trainer with a safe fit and fair price. Latest state change: Activated softness as a new priority."
+    }
+  ],
+  "turn_summaries": [
+    {
+      "summary": "Top pick: Fresh Foam 880v14 with KeepScore 88.8. It rose because your active priorities now emphasize softness for men shoppers, and its fit confidence is 0.93 with return risk 0.07. Evidence: Often described as a dependable men's trainer with a safe fit and fair price. Latest state change: Activated softness as a new priority."
+    }
+  ],
+  "updated_at": "2026-04-02T23:38:18Z"
+}

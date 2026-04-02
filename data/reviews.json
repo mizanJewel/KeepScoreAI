@@ -1,0 +1,154 @@
+[
+  {
+    "product_id": "NB-1080V13",
+    "text": "Reviewers repeatedly praise the plush cushioning and roomy comfort for long walks.",
+    "tags": [
+      "softness",
+      "walking",
+      "premium"
+    ],
+    "sentiment": "positive"
+  },
+  {
+    "product_id": "NB-1080V13",
+    "text": "A few buyers wanted more structure, but most found it great for daily miles.",
+    "tags": [
+      "support"
+    ],
+    "sentiment": "mixed"
+  },
+  {
+    "product_id": "NB-880V14",
+    "text": "Often described as the dependable do-everything trainer with a safer price point.",
+    "tags": [
+      "value",
+      "daily"
+    ],
+    "sentiment": "positive"
+  },
+  {
+    "product_id": "NB-680V8",
+    "text": "Many buyers call it soft enough for the budget, though not especially premium.",
+    "tags": [
+      "softness",
+      "budget"
+    ],
+    "sentiment": "positive"
+  },
+  {
+    "product_id": "NB-860V13",
+    "text": "Stability-focused reviewers liked the support, especially for long work shifts.",
+    "tags": [
+      "support",
+      "walking"
+    ],
+    "sentiment": "positive"
+  },
+  {
+    "product_id": "NB-FUELCELL-REBEL",
+    "text": "Feels light and energetic, but some shoppers wanted more structure.",
+    "tags": [
+      "lightweight",
+      "speed",
+      "support"
+    ],
+    "sentiment": "mixed"
+  },
+  {
+    "product_id": "NB-SC-TRAINER",
+    "text": "Premium underfoot feel and high excitement, but the price is noticeable.",
+    "tags": [
+      "premium",
+      "softness",
+      "budget"
+    ],
+    "sentiment": "mixed"
+  },
+  {
+    "product_id": "NB-HIERRO",
+    "text": "Trail users liked the grip and outdoor confidence, especially in damp conditions.",
+    "tags": [
+      "trail",
+      "waterproof"
+    ],
+    "sentiment": "positive"
+  },
+  {
+    "product_id": "NB-2002R",
+    "text": "Strong style approval and comfort for casual wear, not really a running pick.",
+    "tags": [
+      "premium",
+      "lifestyle"
+    ],
+    "sentiment": "positive"
+  },
+  {
+    "product_id": "NB-9060",
+    "text": "Very popular for trend-driven casual wear and travel outfits.",
+    "tags": [
+      "lifestyle",
+      "premium",
+      "trending"
+    ],
+    "sentiment": "positive"
+  },
+  {
+    "product_id": "NB-WALK-840",
+    "text": "Often mentioned as comfortable for standing all day and walking-heavy routines.",
+    "tags": [
+      "walking",
+      "support",
+      "softness"
+    ],
+    "sentiment": "positive"
+  },
+  {
+    "product_id": "NB-FOAM-MORE",
+    "text": "Extremely soft and protective feel, though some shoppers consider it a little bulky.",
+    "tags": [
+      "softness",
+      "premium",
+      "lightweight"
+    ],
+    "sentiment": "mixed"
+  },
+  {
+    "product_id": "NB-1080V13-M",
+    "text": "Men's reviewers repeatedly praise the plush cushioning and roomy comfort for long walks.",
+    "tags": [
+      "softness",
+      "walking",
+      "premium"
+    ],
+    "sentiment": "positive"
+  },
+  {
+    "product_id": "NB-880V14-M",
+    "text": "Often described as a dependable men's trainer with a safe fit and fair price.",
+    "tags": [
+      "value",
+      "daily"
+    ],
+    "sentiment": "positive"
+  },
+  {
+    "product_id": "NB-WALK-840-M",
+    "text": "Comfortable for standing all day with more support than casual walking shoes.",
+    "tags": [
+      "walking",
+      "support",
+      "softness"
+    ],
+    "sentiment": "positive"
+  },
+  {
+    "product_id": "NB-9060-M",
+    "text": "Very popular for trend-driven casual outfits on the men's side.",
+    "tags": [
+      "lifestyle",
+      "premium",
+      "trending"
+    ],
+    "sentiment": "positive"
+  }
+]

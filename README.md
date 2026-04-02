@@ -1,0 +1,73 @@
+# KeepScore Robust Merge
+
+A merged and more robust shopping intelligence demo that combines:
+
+- **stateful chat and preference carryover** inspired by the first project
+- **storefront shelves** inspired by the second project
+- **separate score families** for personalized recommendations, trending, new launches, and high KeepScore
+- **retrieval before explanation**
+- **lightweight dashboard analytics**
+- **Ollama-backed natural-language responses** using `gpt-oss:120b-cloud`
+
+## Features
+
+- Chat-aware shopper memory with add / refine / override behavior
+- Recommended Matches, Trending Shoes, New Launch, and High KeepScore shelves
+- Evidence retrieval from structured review snippets before explanation is generated
+- Transparent score breakdown and "why changed" notes
+- Streamlit UI with Home, Chat, and Dashboard pages
+- JSON-backed product, review, and shopper-memory storage
+- Ranked recommendations stay heuristic and deterministic, while the response layer can use Ollama for more natural suggestions grounded in review evidence and prior user history
+
+## Quick start
+
+```bash
+cd merged_keepscore_robust
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+## Ollama
+
+The app expects an Ollama-compatible chat endpoint and defaults to:
+
+```bash
+export OLLAMA_HOST=http://localhost:11434
+export OLLAMA_MODEL=gpt-oss:120b-cloud
+```
+
+If the model is unavailable, recommendation ranking still works and the UI falls back to a heuristic explanation.
+
+## Data layout
+
+- `data/products.json`: catalog seed data
+- `data/reviews.json`: review evidence seed data
+- `data/users/<shopper-id>.json`: persisted shopper profile, prior chats, and turn summaries for later personalization
+
+## Smoke test
+
+```bash
+PYTHONPATH=src python -m tests.smoke_test
+```
+
+## Layout
+
+```text
+merged_keepscore_robust/
+├── app.py
+├── requirements.txt
+├── src/keepscore_robust/
+│   ├── __init__.py
+│   ├── data.py
+│   ├── models.py
+│   ├── parsing.py
+│   ├── state.py
+│   ├── retrieval.py
+│   ├── scoring.py
+│   ├── engine.py
+│   └── ui.py
+└── tests/
+    └── smoke_test.py
+```

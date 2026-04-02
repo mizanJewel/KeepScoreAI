@@ -1,0 +1,832 @@
+[
+  {
+    "product_id": "NB-1080V13",
+    "name": "Fresh Foam X 1080v13",
+    "brand": "New Balance",
+    "category": "running",
+    "gender": "women",
+    "use_cases": [
+      "running",
+      "walking",
+      "daily"
+    ],
+    "colors": [
+      "black",
+      "blue"
+    ],
+    "widths": [
+      "standard",
+      "wide"
+    ],
+    "price": 169.0,
+    "sale_price": 159.0,
+    "release_date": "2026-03-01",
+    "cushioning": "max",
+    "support": "medium",
+    "premium_level": "high",
+    "weight_grams": 262,
+    "waterproof": false,
+    "stability": "neutral",
+    "comfort_rating": 9.4,
+    "avg_rating": 4.8,
+    "review_count": 820,
+    "stock": 64,
+    "return_rate": 0.054,
+    "conversion_rate": 0.173,
+    "click_through_rate": 0.221,
+    "add_to_cart_rate": 0.166,
+    "wishlist_count": 980,
+    "trend_velocity": 0.89,
+    "quality_score": 0.93,
+    "reliability_score": 0.9,
+    "style_tags": [
+      "modern",
+      "premium"
+    ],
+    "reasons_seed": [
+      "excellent cushioning",
+      "premium daily trainer",
+      "lighter than many max-cushion shoes"
+    ],
+    "cautions": [
+      "not a true stability shoe"
+    ]
+  },
+  {
+    "product_id": "NB-880V14",
+    "name": "Fresh Foam 880v14",
+    "brand": "New Balance",
+    "category": "running",
+    "gender": "women",
+    "use_cases": [
+      "running",
+      "walking",
+      "daily"
+    ],
+    "colors": [
+      "black",
+      "grey",
+      "white"
+    ],
+    "widths": [
+      "standard",
+      "wide"
+    ],
+    "price": 139.0,
+    "sale_price": 129.0,
+    "release_date": "2026-01-15",
+    "cushioning": "high",
+    "support": "medium",
+    "premium_level": "medium",
+    "weight_grams": 268,
+    "waterproof": false,
+    "stability": "neutral",
+    "comfort_rating": 8.8,
+    "avg_rating": 4.5,
+    "review_count": 1105,
+    "stock": 75,
+    "return_rate": 0.069,
+    "conversion_rate": 0.148,
+    "click_through_rate": 0.197,
+    "add_to_cart_rate": 0.141,
+    "wishlist_count": 730,
+    "trend_velocity": 0.78,
+    "quality_score": 0.87,
+    "reliability_score": 0.89,
+    "style_tags": [
+      "versatile",
+      "daily trainer"
+    ],
+    "reasons_seed": [
+      "strong everyday value",
+      "good balance of softness and price"
+    ],
+    "cautions": [
+      "less plush than premium max-cushion models"
+    ]
+  },
+  {
+    "product_id": "NB-680V8",
+    "name": "Fresh Foam 680v8",
+    "brand": "New Balance",
+    "category": "running",
+    "gender": "women",
+    "use_cases": [
+      "running",
+      "walking"
+    ],
+    "colors": [
+      "black",
+      "navy"
+    ],
+    "widths": [
+      "standard",
+      "wide"
+    ],
+    "price": 89.0,
+    "sale_price": 84.99,
+    "release_date": "2025-11-10",
+    "cushioning": "high",
+    "support": "medium",
+    "premium_level": "low",
+    "weight_grams": 274,
+    "waterproof": false,
+    "stability": "neutral",
+    "comfort_rating": 8.3,
+    "avg_rating": 4.4,
+    "review_count": 602,
+    "stock": 122,
+    "return_rate": 0.082,
+    "conversion_rate": 0.162,
+    "click_through_rate": 0.187,
+    "add_to_cart_rate": 0.153,
+    "wishlist_count": 540,
+    "trend_velocity": 0.74,
+    "quality_score": 0.8,
+    "reliability_score": 0.84,
+    "style_tags": [
+      "budget",
+      "soft"
+    ],
+    "reasons_seed": [
+      "soft underfoot for the price",
+      "budget friendly"
+    ],
+    "cautions": [
+      "less premium upper feel"
+    ]
+  },
+  {
+    "product_id": "NB-860V13",
+    "name": "Fresh Foam X 860v13",
+    "brand": "New Balance",
+    "category": "running",
+    "gender": "men",
+    "use_cases": [
+      "running",
+      "walking",
+      "support"
+    ],
+    "colors": [
+      "white",
+      "black"
+    ],
+    "widths": [
+      "standard",
+      "wide"
+    ],
+    "price": 149.0,
+    "sale_price": 139.0,
+    "release_date": "2025-12-12",
+    "cushioning": "high",
+    "support": "high",
+    "premium_level": "medium",
+    "weight_grams": 298,
+    "waterproof": false,
+    "stability": "stability",
+    "comfort_rating": 8.6,
+    "avg_rating": 4.3,
+    "review_count": 715,
+    "stock": 41,
+    "return_rate": 0.073,
+    "conversion_rate": 0.137,
+    "click_through_rate": 0.178,
+    "add_to_cart_rate": 0.129,
+    "wishlist_count": 488,
+    "trend_velocity": 0.67,
+    "quality_score": 0.86,
+    "reliability_score": 0.88,
+    "style_tags": [
+      "support",
+      "structured"
+    ],
+    "reasons_seed": [
+      "more structured support",
+      "better for stability-oriented shoppers"
+    ],
+    "cautions": [
+      "heavier than speed-focused options"
+    ]
+  },
+  {
+    "product_id": "NB-FUELCELL-REBEL",
+    "name": "FuelCell Rebel v4",
+    "brand": "New Balance",
+    "category": "running",
+    "gender": "unisex",
+    "use_cases": [
+      "running",
+      "speed",
+      "daily"
+    ],
+    "colors": [
+      "red",
+      "black"
+    ],
+    "widths": [
+      "standard"
+    ],
+    "price": 139.0,
+    "sale_price": 134.0,
+    "release_date": "2026-02-20",
+    "cushioning": "medium",
+    "support": "low",
+    "premium_level": "high",
+    "weight_grams": 212,
+    "waterproof": false,
+    "stability": "neutral",
+    "comfort_rating": 8.1,
+    "avg_rating": 4.5,
+    "review_count": 430,
+    "stock": 57,
+    "return_rate": 0.071,
+    "conversion_rate": 0.166,
+    "click_through_rate": 0.214,
+    "add_to_cart_rate": 0.149,
+    "wishlist_count": 690,
+    "trend_velocity": 0.85,
+    "quality_score": 0.88,
+    "reliability_score": 0.83,
+    "style_tags": [
+      "lightweight",
+      "speed"
+    ],
+    "reasons_seed": [
+      "very light ride",
+      "faster-feeling option"
+    ],
+    "cautions": [
+      "less support than stable daily trainers"
+    ]
+  },
+  {
+    "product_id": "NB-SC-TRAINER",
+    "name": "FuelCell SuperComp Trainer",
+    "brand": "New Balance",
+    "category": "running",
+    "gender": "unisex",
+    "use_cases": [
+      "running",
+      "long run",
+      "premium"
+    ],
+    "colors": [
+      "orange",
+      "black"
+    ],
+    "widths": [
+      "standard"
+    ],
+    "price": 179.0,
+    "sale_price": 169.0,
+    "release_date": "2026-03-18",
+    "cushioning": "max",
+    "support": "medium",
+    "premium_level": "high",
+    "weight_grams": 266,
+    "waterproof": false,
+    "stability": "neutral",
+    "comfort_rating": 9.0,
+    "avg_rating": 4.4,
+    "review_count": 288,
+    "stock": 29,
+    "return_rate": 0.089,
+    "conversion_rate": 0.141,
+    "click_through_rate": 0.232,
+    "add_to_cart_rate": 0.144,
+    "wishlist_count": 845,
+    "trend_velocity": 0.92,
+    "quality_score": 0.92,
+    "reliability_score": 0.81,
+    "style_tags": [
+      "premium",
+      "plush"
+    ],
+    "reasons_seed": [
+      "premium cushioning platform",
+      "newer high-energy trainer"
+    ],
+    "cautions": [
+      "price sits near the top of the range"
+    ]
+  },
+  {
+    "product_id": "NB-HIERRO",
+    "name": "Fresh Foam X Hierro",
+    "brand": "New Balance",
+    "category": "trail",
+    "gender": "unisex",
+    "use_cases": [
+      "trail",
+      "hiking",
+      "walking"
+    ],
+    "colors": [
+      "purple",
+      "black"
+    ],
+    "widths": [
+      "standard",
+      "wide"
+    ],
+    "price": 154.0,
+    "sale_price": 149.0,
+    "release_date": "2026-02-06",
+    "cushioning": "high",
+    "support": "medium",
+    "premium_level": "medium",
+    "weight_grams": 301,
+    "waterproof": true,
+    "stability": "trail",
+    "comfort_rating": 8.7,
+    "avg_rating": 4.5,
+    "review_count": 392,
+    "stock": 34,
+    "return_rate": 0.064,
+    "conversion_rate": 0.132,
+    "click_through_rate": 0.181,
+    "add_to_cart_rate": 0.121,
+    "wishlist_count": 512,
+    "trend_velocity": 0.72,
+    "quality_score": 0.89,
+    "reliability_score": 0.87,
+    "style_tags": [
+      "trail",
+      "rugged"
+    ],
+    "reasons_seed": [
+      "better trail grip",
+      "more outdoor ready"
+    ],
+    "cautions": [
+      "heavier than road shoes"
+    ]
+  },
+  {
+    "product_id": "NB-2002R",
+    "name": "2002R",
+    "brand": "New Balance",
+    "category": "lifestyle",
+    "gender": "unisex",
+    "use_cases": [
+      "casual",
+      "walking",
+      "travel"
+    ],
+    "colors": [
+      "green",
+      "black",
+      "grey"
+    ],
+    "widths": [
+      "standard"
+    ],
+    "price": 145.0,
+    "sale_price": 139.0,
+    "release_date": "2026-01-28",
+    "cushioning": "medium",
+    "support": "medium",
+    "premium_level": "high",
+    "weight_grams": 318,
+    "waterproof": false,
+    "stability": "neutral",
+    "comfort_rating": 8.4,
+    "avg_rating": 4.6,
+    "review_count": 680,
+    "stock": 47,
+    "return_rate": 0.058,
+    "conversion_rate": 0.152,
+    "click_through_rate": 0.205,
+    "add_to_cart_rate": 0.138,
+    "wishlist_count": 1020,
+    "trend_velocity": 0.91,
+    "quality_score": 0.9,
+    "reliability_score": 0.88,
+    "style_tags": [
+      "lifestyle",
+      "premium",
+      "retro"
+    ],
+    "reasons_seed": [
+      "strong style appeal",
+      "premium casual option"
+    ],
+    "cautions": [
+      "less performance-focused than running shoes"
+    ]
+  },
+  {
+    "product_id": "NB-9060",
+    "name": "9060",
+    "brand": "New Balance",
+    "category": "lifestyle",
+    "gender": "women",
+    "use_cases": [
+      "casual",
+      "travel"
+    ],
+    "colors": [
+      "beige",
+      "black"
+    ],
+    "widths": [
+      "standard"
+    ],
+    "price": 149.0,
+    "sale_price": 144.0,
+    "release_date": "2026-03-08",
+    "cushioning": "high",
+    "support": "medium",
+    "premium_level": "high",
+    "weight_grams": 332,
+    "waterproof": false,
+    "stability": "neutral",
+    "comfort_rating": 8.8,
+    "avg_rating": 4.8,
+    "review_count": 520,
+    "stock": 53,
+    "return_rate": 0.051,
+    "conversion_rate": 0.171,
+    "click_through_rate": 0.236,
+    "add_to_cart_rate": 0.162,
+    "wishlist_count": 1205,
+    "trend_velocity": 0.97,
+    "quality_score": 0.92,
+    "reliability_score": 0.91,
+    "style_tags": [
+      "lifestyle",
+      "fashion",
+      "premium"
+    ],
+    "reasons_seed": [
+      "very strong trend momentum",
+      "premium casual shelf leader"
+    ],
+    "cautions": [
+      "heavier than daily running shoes"
+    ]
+  },
+  {
+    "product_id": "NB-574",
+    "name": "574 Core",
+    "brand": "New Balance",
+    "category": "lifestyle",
+    "gender": "unisex",
+    "use_cases": [
+      "casual",
+      "campus"
+    ],
+    "colors": [
+      "navy",
+      "black"
+    ],
+    "widths": [
+      "standard"
+    ],
+    "price": 89.0,
+    "sale_price": 84.0,
+    "release_date": "2025-09-20",
+    "cushioning": "medium",
+    "support": "medium",
+    "premium_level": "low",
+    "weight_grams": 310,
+    "waterproof": false,
+    "stability": "neutral",
+    "comfort_rating": 7.9,
+    "avg_rating": 4.2,
+    "review_count": 1905,
+    "stock": 88,
+    "return_rate": 0.097,
+    "conversion_rate": 0.117,
+    "click_through_rate": 0.169,
+    "add_to_cart_rate": 0.132,
+    "wishlist_count": 1110,
+    "trend_velocity": 0.65,
+    "quality_score": 0.77,
+    "reliability_score": 0.82,
+    "style_tags": [
+      "classic",
+      "budget"
+    ],
+    "reasons_seed": [
+      "classic budget lifestyle pick"
+    ],
+    "cautions": [
+      "less plush than newer comfort models"
+    ]
+  },
+  {
+    "product_id": "NB-WALK-840",
+    "name": "840 Walking",
+    "brand": "New Balance",
+    "category": "walking",
+    "gender": "women",
+    "use_cases": [
+      "walking",
+      "standing all day",
+      "daily"
+    ],
+    "colors": [
+      "black",
+      "white"
+    ],
+    "widths": [
+      "standard",
+      "wide"
+    ],
+    "price": 124.0,
+    "sale_price": 119.0,
+    "release_date": "2026-02-14",
+    "cushioning": "high",
+    "support": "high",
+    "premium_level": "medium",
+    "weight_grams": 286,
+    "waterproof": false,
+    "stability": "walking",
+    "comfort_rating": 9.1,
+    "avg_rating": 4.6,
+    "review_count": 468,
+    "stock": 39,
+    "return_rate": 0.059,
+    "conversion_rate": 0.155,
+    "click_through_rate": 0.199,
+    "add_to_cart_rate": 0.147,
+    "wishlist_count": 610,
+    "trend_velocity": 0.81,
+    "quality_score": 0.88,
+    "reliability_score": 0.9,
+    "style_tags": [
+      "walking",
+      "support"
+    ],
+    "reasons_seed": [
+      "strong all-day comfort",
+      "good support for walking"
+    ],
+    "cautions": [
+      "less lively for faster runs"
+    ]
+  },
+  {
+    "product_id": "NB-FOAM-MORE",
+    "name": "Fresh Foam More v5",
+    "brand": "New Balance",
+    "category": "running",
+    "gender": "women",
+    "use_cases": [
+      "running",
+      "walking",
+      "recovery"
+    ],
+    "colors": [
+      "black",
+      "grey"
+    ],
+    "widths": [
+      "standard",
+      "wide"
+    ],
+    "price": 154.0,
+    "sale_price": 149.0,
+    "release_date": "2026-03-24",
+    "cushioning": "max",
+    "support": "medium",
+    "premium_level": "high",
+    "weight_grams": 290,
+    "waterproof": false,
+    "stability": "neutral",
+    "comfort_rating": 9.5,
+    "avg_rating": 4.7,
+    "review_count": 204,
+    "stock": 36,
+    "return_rate": 0.057,
+    "conversion_rate": 0.162,
+    "click_through_rate": 0.225,
+    "add_to_cart_rate": 0.159,
+    "wishlist_count": 702,
+    "trend_velocity": 0.94,
+    "quality_score": 0.93,
+    "reliability_score": 0.88,
+    "style_tags": [
+      "soft",
+      "plush",
+      "premium"
+    ],
+    "reasons_seed": [
+      "one of the softest options",
+      "new premium soft ride"
+    ],
+    "cautions": [
+      "not ideal if you want a very light shoe"
+    ]
+  },
+  {
+    "product_id": "NB-1080V13-M",
+    "name": "Fresh Foam X 1080v13",
+    "brand": "New Balance",
+    "category": "running",
+    "gender": "men",
+    "use_cases": [
+      "running",
+      "walking",
+      "daily"
+    ],
+    "colors": [
+      "black",
+      "blue",
+      "grey"
+    ],
+    "widths": [
+      "standard",
+      "wide"
+    ],
+    "price": 169.0,
+    "sale_price": 159.0,
+    "release_date": "2026-03-03",
+    "cushioning": "max",
+    "support": "medium",
+    "premium_level": "high",
+    "weight_grams": 298,
+    "waterproof": false,
+    "stability": "neutral",
+    "comfort_rating": 9.3,
+    "avg_rating": 4.7,
+    "review_count": 705,
+    "stock": 58,
+    "return_rate": 0.058,
+    "conversion_rate": 0.168,
+    "click_through_rate": 0.218,
+    "add_to_cart_rate": 0.158,
+    "wishlist_count": 910,
+    "trend_velocity": 0.87,
+    "quality_score": 0.92,
+    "reliability_score": 0.89,
+    "style_tags": [
+      "modern",
+      "premium"
+    ],
+    "reasons_seed": [
+      "plush cushioning",
+      "premium men's daily trainer"
+    ],
+    "cautions": [
+      "not a true stability shoe"
+    ]
+  },
+  {
+    "product_id": "NB-880V14-M",
+    "name": "Fresh Foam 880v14",
+    "brand": "New Balance",
+    "category": "running",
+    "gender": "men",
+    "use_cases": [
+      "running",
+      "walking",
+      "daily"
+    ],
+    "colors": [
+      "black",
+      "grey",
+      "white"
+    ],
+    "widths": [
+      "standard",
+      "wide"
+    ],
+    "price": 139.0,
+    "sale_price": 129.0,
+    "release_date": "2026-01-18",
+    "cushioning": "high",
+    "support": "medium",
+    "premium_level": "medium",
+    "weight_grams": 286,
+    "waterproof": false,
+    "stability": "neutral",
+    "comfort_rating": 8.7,
+    "avg_rating": 4.5,
+    "review_count": 860,
+    "stock": 62,
+    "return_rate": 0.067,
+    "conversion_rate": 0.146,
+    "click_through_rate": 0.194,
+    "add_to_cart_rate": 0.139,
+    "wishlist_count": 690,
+    "trend_velocity": 0.76,
+    "quality_score": 0.86,
+    "reliability_score": 0.88,
+    "style_tags": [
+      "versatile",
+      "daily trainer"
+    ],
+    "reasons_seed": [
+      "balanced men's daily trainer",
+      "good value and easy fit"
+    ],
+    "cautions": [
+      "less plush than top premium models"
+    ]
+  },
+  {
+    "product_id": "NB-WALK-840-M",
+    "name": "840 Walking",
+    "brand": "New Balance",
+    "category": "walking",
+    "gender": "men",
+    "use_cases": [
+      "walking",
+      "standing all day",
+      "daily"
+    ],
+    "colors": [
+      "black",
+      "white"
+    ],
+    "widths": [
+      "standard",
+      "wide"
+    ],
+    "price": 124.0,
+    "sale_price": 119.0,
+    "release_date": "2026-02-16",
+    "cushioning": "high",
+    "support": "high",
+    "premium_level": "medium",
+    "weight_grams": 304,
+    "waterproof": false,
+    "stability": "walking",
+    "comfort_rating": 9.0,
+    "avg_rating": 4.6,
+    "review_count": 418,
+    "stock": 44,
+    "return_rate": 0.061,
+    "conversion_rate": 0.149,
+    "click_through_rate": 0.191,
+    "add_to_cart_rate": 0.143,
+    "wishlist_count": 570,
+    "trend_velocity": 0.79,
+    "quality_score": 0.87,
+    "reliability_score": 0.89,
+    "style_tags": [
+      "walking",
+      "support"
+    ],
+    "reasons_seed": [
+      "all-day comfort",
+      "supportive men's walking option"
+    ],
+    "cautions": [
+      "less lively than faster running shoes"
+    ]
+  },
+  {
+    "product_id": "NB-9060-M",
+    "name": "9060",
+    "brand": "New Balance",
+    "category": "lifestyle",
+    "gender": "men",
+    "use_cases": [
+      "casual",
+      "travel"
+    ],
+    "colors": [
+      "grey",
+      "black"
+    ],
+    "widths": [
+      "standard"
+    ],
+    "price": 149.0,
+    "sale_price": 144.0,
+    "release_date": "2026-03-10",
+    "cushioning": "high",
+    "support": "medium",
+    "premium_level": "high",
+    "weight_grams": 340,
+    "waterproof": false,
+    "stability": "neutral",
+    "comfort_rating": 8.6,
+    "avg_rating": 4.7,
+    "review_count": 470,
+    "stock": 49,
+    "return_rate": 0.055,
+    "conversion_rate": 0.166,
+    "click_through_rate": 0.228,
+    "add_to_cart_rate": 0.157,
+    "wishlist_count": 1035,
+    "trend_velocity": 0.95,
+    "quality_score": 0.91,
+    "reliability_score": 0.9,
+    "style_tags": [
+      "lifestyle",
+      "fashion",
+      "premium"
+    ],
+    "reasons_seed": [
+      "strong trend momentum",
+      "premium casual style"
+    ],
+    "cautions": [
+      "heavier than running models"
+    ]
+  }
+]
