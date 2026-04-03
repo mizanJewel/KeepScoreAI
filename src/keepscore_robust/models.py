@@ -87,6 +87,7 @@ class ShopperProfile:
     last_recommended_ids: list[str] = field(default_factory=list)
     transition_label: str = "initial"
     transition_reason: str = "first turn"
+    adaptive_state: dict[str, float | str] = field(default_factory=dict)
 
 
 @dataclass
@@ -127,3 +128,5 @@ class EngineResult:
     image_description: str | None = None
     image_search_query: str | None = None
     image_analysis: dict[str, Any] = field(default_factory=dict)
+    agent_trace: list[dict[str, Any]] = field(default_factory=list)
+    mcp_trace: list[dict[str, Any]] = field(default_factory=list)

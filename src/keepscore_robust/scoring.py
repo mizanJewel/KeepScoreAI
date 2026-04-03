@@ -25,6 +25,44 @@ def _level(value: str) -> float:
     return LEVEL_SCORE.get(value.lower(), 0.6)
 
 
+def _profile_specificity(profile: ShopperProfile) -> float:
+    active_objectives = sum(1 for value in profile.objectives.values() if value > 0)
+    flags = [
+        profile.budget_max is not None,
+        profile.category is not None,
+        profile.gender is not None,
+        bool(profile.color_preferences),
+        profile.width_need is not None,
+        active_objectives > 0,
+    ]
+    return min(sum(flags) / 6.0, 1.0)
+
+
+def adaptive_context(profile: ShopperProfile) -> dict[str, float | str]:
+    specificity = _profile_specificity(profile)
+    history_depth = min(len(profile.history) / 6.0, 1.0)
+    rejection_pressure = min(len(profile.rejected_product_ids) / 4.0, 1.0)
+    active_objectives = sum(1 for value in profile.objectives.values() if value > 0)
+    exploration = max(0.0, 1.0 - specificity)
+    refinement = min((history_depth + specificity) / 2.0, 1.0)
+    objective_focus = min(active_objectives / 3.0, 1.0)
+    return {
+        "specificity": round(specificity, 3),
+        "history_depth": round(history_depth, 3),
+        "rejection_pressure": round(rejection_pressure, 3),
+        "objective_focus": round(objective_focus, 3),
+        "mode": "refine" if refinement >= 0.55 else "explore",
+        "weight_preference": round(0.18 + 0.10 * specificity + 0.05 * objective_focus + 0.04 * rejection_pressure, 3),
+        "weight_fit": round(0.16 + 0.05 * refinement + 0.03 * rejection_pressure, 3),
+        "weight_keep_probability": round(0.13 + 0.04 * history_depth, 3),
+        "weight_budget": round(0.07 + (0.06 if profile.budget_max is not None else 0.0), 3),
+        "weight_quality": round(0.09 + 0.04 * exploration, 3),
+        "weight_reliability": round(0.08 + 0.04 * refinement, 3),
+        "weight_expected_utility": round(0.09 + 0.05 * exploration, 3),
+        "weight_return_penalty": round(0.12 + 0.06 * rejection_pressure + 0.03 * specificity, 3),
+    }
+
+
 def _gender_score(product: Product, profile: ShopperProfile) -> float:
     if profile.gender is None:
         return 0.82
@@ -148,7 +186,8 @@ def _return_risk(product: Product, fit_confidence: float, preference_match: floa
     return _clamp(raw)
 
 
-def personalized_score(product: Product, profile: ShopperProfile) -> Recommendation:
+def personalized_score(product: Product, profile: ShopperProfile, *, context: dict[str, float | str] | None = None) -> Recommendation:
+    context = context or adaptive_context(profile)
     budget_compatibility, budget_reasons, budget_cautions = _budget_compatibility(product, profile)
     preference_match, pref_reasons, pref_cautions, pref_breakdown = _preference_match(product, profile)
     fit_confidence = _fit_confidence(product, preference_match, budget_compatibility, profile)
@@ -162,16 +201,24 @@ def personalized_score(product: Product, profile: ShopperProfile) -> Recommendat
         + 0.14 * (1.0 - return_risk)
     )
     expected_utility = _clamp(0.45 * keep_probability + 0.20 * product.conversion_rate + 0.15 * product.avg_rating / 5.0 + 0.20 * product.quality_score)
+    w_pref = float(context["weight_preference"])
+    w_fit = float(context["weight_fit"])
+    w_keep = float(context["weight_keep_probability"])
+    w_budget = float(context["weight_budget"])
+    w_quality = float(context["weight_quality"])
+    w_reliability = float(context["weight_reliability"])
+    w_expected = float(context["weight_expected_utility"])
+    w_penalty = float(context["weight_return_penalty"])
     keep_score = round(
         100 * _clamp(
-            0.25 * preference_match
-            + 0.20 * fit_confidence
-            + 0.15 * keep_probability
-            + 0.10 * budget_compatibility
-            + 0.10 * product.quality_score
-            + 0.10 * product.reliability_score
-            + 0.10 * expected_utility
-            - 0.15 * return_risk
+            w_pref * preference_match
+            + w_fit * fit_confidence
+            + w_keep * keep_probability
+            + w_budget * budget_compatibility
+            + w_quality * product.quality_score
+            + w_reliability * product.reliability_score
+            + w_expected * expected_utility
+            - w_penalty * return_risk
         ),
         1,
     )
@@ -197,6 +244,18 @@ def personalized_score(product: Product, profile: ShopperProfile) -> Recommendat
             "return_risk": round(return_risk, 3),
             "quality": round(product.quality_score, 3),
             "reliability": round(product.reliability_score, 3),
+            "adaptive_mode": str(context["mode"]),
+            "adaptive_specificity": round(float(context["specificity"]), 3),
+            "adaptive_history_depth": round(float(context["history_depth"]), 3),
+            "adaptive_rejection_pressure": round(float(context["rejection_pressure"]), 3),
+            "adaptive_weight_preference": round(w_pref, 3),
+            "adaptive_weight_fit": round(w_fit, 3),
+            "adaptive_weight_keep_probability": round(w_keep, 3),
+            "adaptive_weight_budget": round(w_budget, 3),
+            "adaptive_weight_quality": round(w_quality, 3),
+            "adaptive_weight_reliability": round(w_reliability, 3),
+            "adaptive_weight_expected_utility": round(w_expected, 3),
+            "adaptive_weight_return_penalty": round(w_penalty, 3),
             **{f"pref_{k}": round(v, 3) for k, v in pref_breakdown.items()},
         },
     )

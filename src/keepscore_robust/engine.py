@@ -1,14 +1,26 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from typing import Any
 
+from keepscore_robust.agents import (
+    EvidenceAgent,
+    ExplanationAgent,
+    ParserAgent,
+    ProfileAgent,
+    RecommendationAgent,
+    RetrievalAgent,
+    ShelfAgent,
+    VisionAgent,
+)
 from keepscore_robust.data import load_products, load_reviews
 from keepscore_robust.image_analysis import analyze_uploaded_shoe_image
 from keepscore_robust.llm import ollama_chat
+from keepscore_robust.mcp import MCPToolRegistry
 from keepscore_robust.models import EngineResult, Product, Recommendation, ShopperProfile
 from keepscore_robust.parsing import parse_turn
 from keepscore_robust.retrieval import candidate_retrieval, retrieve_evidence
-from keepscore_robust.scoring import high_keep_score, launch_score, personalized_score, trending_score
+from keepscore_robust.scoring import adaptive_context, high_keep_score, launch_score, personalized_score, trending_score
 from keepscore_robust.state import update_profile
 
 
@@ -16,14 +28,42 @@ class KeepScoreEngine:
     def __init__(self, products: list[Product] | None = None):
         self.products = products or load_products()
         self.reviews = load_reviews()
+        self.registry = self._build_registry()
+        self.parser_agent = ParserAgent(self.registry)
+        self.profile_agent = ProfileAgent(self.registry)
+        self.vision_agent = VisionAgent(self.registry)
+        self.retrieval_agent = RetrievalAgent(self.registry)
+        self.recommendation_agent = RecommendationAgent(self.registry)
+        self.evidence_agent = EvidenceAgent(self.registry)
+        self.shelf_agent = ShelfAgent(self.registry)
+        self.explanation_agent = ExplanationAgent(self.registry)
 
     def new_profile(self) -> ShopperProfile:
         return ShopperProfile()
 
+    def _build_registry(self) -> MCPToolRegistry:
+        registry = MCPToolRegistry()
+        registry.register("parse_turn", lambda text: parse_turn(text))
+        registry.register("update_profile", lambda profile, parsed: update_profile(profile, parsed))
+        registry.register("analyze_image", lambda image_bytes, filename: analyze_uploaded_shoe_image(image_bytes, filename))
+        registry.register("retrieve_candidates", lambda profile: candidate_retrieval(self.products, profile))
+        registry.register("score_candidates", self._score_candidates)
+        registry.register("retrieve_evidence", lambda product_ids, profile: retrieve_evidence(product_ids, self.reviews, profile))
+        registry.register("build_shelves", self._build_shelves)
+        registry.register("compose_explanation", self._compose_explanation)
+        return registry
+
+    def _score_candidates(self, candidates: list[Product], profile: ShopperProfile) -> list[Recommendation]:
+        context = adaptive_context(profile)
+        profile.adaptive_state = dict(context)
+        recs = [personalized_score(product, profile, context=context) for product in candidates]
+        recs.sort(key=lambda rec: (rec.keep_score, rec.expected_utility), reverse=True)
+        return recs
+
     def _compute_result(
         self,
         profile: ShopperProfile,
-        parsed,
+        parsed: Any,
         why_changed: list[str],
         *,
         message: str,
@@ -32,17 +72,18 @@ class KeepScoreEngine:
         image_description: str | None = None,
         image_search_query: str | None = None,
         image_analysis: dict | None = None,
+        agent_trace: list[dict[str, Any]] | None = None,
     ) -> EngineResult:
-        candidates = candidate_retrieval(self.products, profile)
-        recs = [personalized_score(product, profile) for product in candidates]
-        recs.sort(key=lambda rec: (rec.keep_score, rec.expected_utility), reverse=True)
+        agent_trace = agent_trace or []
+        memory_snippets = memory_snippets or []
+
+        candidates = self.retrieval_agent.run(profile, agent_trace)
+        recs = self.recommendation_agent.run(profile, candidates, agent_trace)
         recommendations = recs[:6]
         profile.last_recommended_ids = [rec.product.product_id for rec in recommendations]
-
-        evidence = retrieve_evidence([rec.product.product_id for rec in recommendations[:4]], self.reviews, profile)
-        shelves = self._build_shelves(profile)
-        memory_snippets = memory_snippets or []
-        explanation, llm_model, llm_error = self._compose_explanation(
+        evidence = self.evidence_agent.run([rec.product.product_id for rec in recommendations[:4]], profile, agent_trace)
+        shelves = self.shelf_agent.run(profile, agent_trace)
+        explanation, llm_model, llm_error = self.explanation_agent.run(
             message=message,
             profile=profile,
             recommendations=recommendations,
@@ -50,6 +91,7 @@ class KeepScoreEngine:
             why_changed=why_changed,
             chat_history=chat_history or [],
             memory_snippets=memory_snippets,
+            trace=agent_trace,
         )
         return EngineResult(
             profile=profile,
@@ -65,6 +107,8 @@ class KeepScoreEngine:
             image_description=image_description,
             image_search_query=image_search_query,
             image_analysis=image_analysis or {},
+            agent_trace=agent_trace,
+            mcp_trace=self.registry.consume_trace(),
         )
 
     def process_turn(
@@ -76,8 +120,9 @@ class KeepScoreEngine:
         memory_snippets: list[str] | None = None,
     ) -> EngineResult:
         profile = profile or self.new_profile()
-        parsed = parse_turn(message)
-        profile, why_changed = update_profile(profile, parsed)
+        agent_trace: list[dict[str, Any]] = []
+        parsed = self.parser_agent.run(message, agent_trace)
+        profile, why_changed = self.profile_agent.run(profile, parsed, agent_trace)
         return self._compute_result(
             profile,
             parsed,
@@ -85,6 +130,7 @@ class KeepScoreEngine:
             message=message,
             chat_history=chat_history,
             memory_snippets=memory_snippets,
+            agent_trace=agent_trace,
         )
 
     def process_uploaded_image(
@@ -97,14 +143,12 @@ class KeepScoreEngine:
         memory_snippets: list[str] | None = None,
     ) -> EngineResult:
         profile = profile or self.new_profile()
-        analysis = analyze_uploaded_shoe_image(image_bytes, filename)
+        agent_trace: list[dict[str, Any]] = []
+        analysis = self.vision_agent.run(image_bytes, filename, agent_trace)
         image_query = str(analysis.get("search_query") or analysis.get("description") or "shoe")
-        parsed = parse_turn(image_query)
-        profile, why_changed = update_profile(profile, parsed)
-        why_changed = [
-            f"Image upload analyzed as: {analysis.get('description', 'shoe image uploaded.')}",
-            *why_changed,
-        ]
+        parsed = self.parser_agent.run(image_query, agent_trace)
+        profile, why_changed = self.profile_agent.run(profile, parsed, agent_trace)
+        why_changed = [f"Image upload analyzed as: {analysis.get('description', 'shoe image uploaded.')}", *why_changed]
         return self._compute_result(
             profile,
             parsed,
@@ -115,6 +159,7 @@ class KeepScoreEngine:
             image_description=str(analysis.get("description") or ""),
             image_search_query=image_query,
             image_analysis=analysis,
+            agent_trace=agent_trace,
         )
 
     def refresh(
@@ -125,7 +170,8 @@ class KeepScoreEngine:
         memory_snippets: list[str] | None = None,
     ) -> EngineResult:
         profile = profile or self.new_profile()
-        parsed = parse_turn("refresh")
+        agent_trace: list[dict[str, Any]] = []
+        parsed = self.parser_agent.run("refresh", agent_trace)
         why_changed = ["Recommendations were recomputed from the current stored profile."]
         return self._compute_result(
             profile,
@@ -134,6 +180,7 @@ class KeepScoreEngine:
             message="refresh",
             chat_history=chat_history,
             memory_snippets=memory_snippets,
+            agent_trace=agent_trace,
         )
 
     def _relevance_bonus(self, product: Product, profile: ShopperProfile) -> float:
@@ -184,7 +231,8 @@ class KeepScoreEngine:
 
     def _build_shelves(self, profile: ShopperProfile) -> dict[str, list[Recommendation]]:
         shelf_candidates = self._discovery_candidates(profile)
-        personalized = [personalized_score(product, profile) for product in shelf_candidates]
+        context = adaptive_context(profile)
+        personalized = [personalized_score(product, profile, context=context) for product in shelf_candidates]
         personalized.sort(key=lambda rec: (rec.keep_score, rec.expected_utility), reverse=True)
 
         trending = sorted(
@@ -226,15 +274,15 @@ class KeepScoreEngine:
             return fallback, None, None
 
         top = recommendations[0]
-        review_lines: list[str] = []
-        for item in evidence.get(top.product.product_id, [])[:2]:
-            review_lines.append(f"- Review evidence ({item.score:.2f}): {item.text}")
-        if not review_lines:
-            review_lines.append("- Review evidence is limited for the current top pick.")
+        review_lines = [
+            f"- Review evidence ({item.score:.2f}): {item.text}"
+            for item in evidence.get(top.product.product_id, [])[:2]
+        ] or ["- Review evidence is limited for the current top pick."]
 
         recent_history = chat_history[-4:]
         history_lines = [f"- {msg.get('role', 'message')}: {msg.get('content', '')}" for msg in recent_history if msg.get("content")]
         memory_lines = [f"- {snippet}" for snippet in memory_snippets[:4]]
+        adaptive_lines = [f"- {key}: {value}" for key, value in profile.adaptive_state.items()]
         profile_lines = [
             f"- Gender: {profile.gender or 'unspecified'}",
             f"- Category: {profile.category or 'unspecified'}",
@@ -243,22 +291,24 @@ class KeepScoreEngine:
             f"- Width: {profile.width_need or 'unspecified'}",
             f"- Priorities: {', '.join([k for k, v in sorted(profile.objectives.items(), key=lambda kv: kv[1], reverse=True) if v > 0][:4]) or 'balanced value'}",
         ]
-        rec_lines = []
-        for idx, rec in enumerate(recommendations[:3], start=1):
-            rec_lines.append(
-                f"- #{idx}: {rec.product.name} ({rec.product.product_id}), KeepScore {rec.keep_score:.1f}, fit {rec.fit_confidence:.0%}, return risk {rec.return_risk:.0%}, reasons: {', '.join(rec.reasons[:3])}"
-            )
+        rec_lines = [
+            f"- #{idx}: {rec.product.name} ({rec.product.product_id}), KeepScore {rec.keep_score:.1f}, fit {rec.fit_confidence:.0%}, return risk {rec.return_risk:.0%}, reasons: {', '.join(rec.reasons[:3])}"
+            for idx, rec in enumerate(recommendations[:3], start=1)
+        ]
 
         system_prompt = (
-            "You are a shoe shopping assistant. Use the ranked recommendations as the source of truth for which shoes to suggest. "
-            "Use retrieved review evidence and stored user memory to explain comfort, fit, and preference continuity. "
-            "Do not invent products or claims. Keep the answer concise, natural, and personalized. Mention one caution when relevant."
+            "You are a shoe shopping assistant in a multi-agent recommendation system. "
+            "Use the ranked recommendations as the source of truth. "
+            "Use retrieved review evidence, adaptive scoring context, and stored user memory to explain comfort, fit, and tradeoffs. "
+            "Do not invent products or claims. Keep the answer concise and personalized."
         )
         user_prompt = "\n".join(
             [
                 f"Latest user request: {message}",
                 "Current shopper profile:",
                 *profile_lines,
+                "Adaptive scoring state:",
+                *(adaptive_lines or ["- none"]),
                 "Why the profile changed:",
                 *[f"- {item}" for item in why_changed[:4]],
                 "Top ranked recommendations:",
@@ -302,9 +352,10 @@ class KeepScoreEngine:
         goals = [k for k, v in sorted(profile.objectives.items(), key=lambda kv: kv[1], reverse=True) if v > 0]
         goals_text = ", ".join(goals[:2]) if goals else "balanced everyday value"
         gender_text = f" for {profile.gender} shoppers" if profile.gender else ""
+        mode_text = profile.adaptive_state.get("mode", "adaptive")
         memory_line = f" I also remembered: {memory_snippets[0]}" if memory_snippets else ""
         return (
             f"Top pick: {top.product.name} with KeepScore {top.keep_score:.1f}. "
-            f"It rose because your active priorities now emphasize {goals_text}{gender_text}, and its fit confidence is {top.fit_confidence:.2f} with return risk {top.return_risk:.2f}. "
+            f"The system is currently in {mode_text} mode, and this shoe rose because your priorities emphasize {goals_text}{gender_text}, with fit confidence {top.fit_confidence:.2f} and return risk {top.return_risk:.2f}. "
             f"Evidence: {evidence_line} Latest state change: {why_changed[0]}{memory_line}"
         )
