@@ -4,11 +4,17 @@ from io import BytesIO
 
 from PIL import Image
 
+from keepscore_robust.auth import verify_login
 from keepscore_robust.engine import KeepScoreEngine
 from keepscore_robust.memory import load_user_record, profile_from_record, reset_user_record, save_user_record
 
 
 def main() -> None:
+    admin = verify_login("admin_demo", "AdminDemo!123")
+    user = verify_login("user_demo", "UserDemo!123")
+    assert admin and admin["role"] == "admin", "demo admin login should work"
+    assert user and user["role"] == "user", "demo user login should work"
+
     engine = KeepScoreEngine()
     profile = engine.new_profile()
 
@@ -61,6 +67,8 @@ def main() -> None:
     print("Explanation:", second.explanation)
     print("LLM model:", second.llm_model or "heuristic fallback")
     print("Image description:", image_result.image_description)
+    print("Admin demo:", admin["display_name"], admin["role"])
+    print("User demo:", user["display_name"], user["role"])
 
 
 if __name__ == "__main__":

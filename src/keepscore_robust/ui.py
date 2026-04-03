@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from keepscore_robust.auth import verify_login
 from keepscore_robust.components import (
     build_use_case_mentions,
     render_dashboard_answer,
@@ -53,14 +54,34 @@ def _load_user_into_state(user_id: str) -> None:
     st.session_state.uploaded_shoe_image = None
 
 
+def _set_guest_mode() -> None:
+    st.session_state.auth_user = {"username": "guest", "display_name": "Guest", "role": "guest"}
+    _load_user_into_state("guest")
+    st.session_state.budget_value = int(st.session_state.profile.budget_max or 130)
+    st.session_state.pending_budget_widget_sync = True
+
+
+def _login(username: str, password: str) -> bool:
+    account = verify_login(username, password)
+    if account is None:
+        return False
+    st.session_state.auth_user = account
+    _load_user_into_state(account["username"])
+    st.session_state.budget_value = int(st.session_state.profile.budget_max or 130)
+    st.session_state.pending_budget_widget_sync = True
+    st.session_state.login_username = account["username"]
+    st.session_state.login_password = ""
+    return True
+
+
 def _ensure_state() -> None:
     ss = st.session_state
     if "engine" not in ss:
         ss.engine = KeepScoreEngine()
+    if "auth_user" not in ss:
+        ss.auth_user = {"username": "guest", "display_name": "Guest", "role": "guest"}
     if "active_user_id" not in ss:
-        ss.active_user_id = "guest"
-    if "user_id_input" not in ss:
-        ss.user_id_input = ss.active_user_id
+        ss.active_user_id = ss.auth_user["username"]
     if "profile" not in ss or "chat_messages" not in ss:
         _load_user_into_state(ss.active_user_id)
     if "last_result" not in ss:
@@ -81,6 +102,10 @@ def _ensure_state() -> None:
         ss.uploaded_shoe_image = None
     if "just_reset" not in ss:
         ss.just_reset = False
+    if "login_username" not in ss:
+        ss.login_username = ""
+    if "login_password" not in ss:
+        ss.login_password = ""
 
 
 def _run_turn(message: str) -> None:
@@ -363,6 +388,19 @@ def _render_shop_tab(result: EngineResult | None) -> None:
         for msg in st.session_state.chat_messages:
             with st.chat_message(msg["role"]):
                 st.write(msg["content"])
+        st.markdown("#### Upload a shoe image")
+        uploaded_file = st.file_uploader(
+            "Drop in a shoe photo for description and matching suggestions",
+            type=["png", "jpg", "jpeg", "webp"],
+            key="chat_image_uploader",
+            label_visibility="collapsed",
+        )
+        if uploaded_file is not None:
+            uploaded_bytes = uploaded_file.getvalue()
+            st.image(uploaded_bytes, caption=uploaded_file.name, use_container_width=True)
+            if st.button("Analyze this shoe image", use_container_width=True, key="analyze_chat_image"):
+                _run_image_turn(uploaded_bytes, uploaded_file.name)
+                st.rerun()
         user_input = st.chat_input("Tell the assistant what you need")
         if user_input and user_input.strip():
             _run_turn(user_input)
@@ -488,21 +526,29 @@ def run_app() -> None:
 
     with st.sidebar:
         st.header("Live shopping controls")
-        user_value = st.text_input("Shopper ID", key="user_id_input", help="Chat history and profile memory are stored per shopper ID.")
-        normalized = normalize_user_id(user_value)
-        if normalized != st.session_state.active_user_id:
-            _load_user_into_state(normalized)
-            st.session_state.budget_value = int(st.session_state.profile.budget_max or 130)
-            st.session_state.pending_budget_widget_sync = True
-            st.rerun()
-        st.caption(f"Persistent record: data/users/{st.session_state.active_user_id}.json")
-        uploaded_file = st.file_uploader("Upload a shoe image", type=["png", "jpg", "jpeg", "webp"])
-        if uploaded_file is not None:
-            uploaded_bytes = uploaded_file.getvalue()
-            st.image(uploaded_bytes, caption=uploaded_file.name, use_container_width=True)
-            if st.button("Analyze uploaded shoe", use_container_width=True):
-                _run_image_turn(uploaded_bytes, uploaded_file.name)
+        st.subheader("Account")
+        auth_user = st.session_state.auth_user
+        if auth_user["role"] == "guest":
+            login_username = st.text_input("Username", key="login_username")
+            login_password = st.text_input("Password", type="password", key="login_password")
+            login_col, guest_col = st.columns(2)
+            if login_col.button("Log in", use_container_width=True):
+                if _login(login_username, login_password):
+                    st.rerun()
+                st.session_state.ui_notice = "Login failed. Check the demo username and password."
+            if guest_col.button("Continue as guest", use_container_width=True):
+                _set_guest_mode()
                 st.rerun()
+            st.caption("Guest access can browse the storefront, but the NB DTC Dashboard is admin-only.")
+            st.caption("Demo admin: `admin_demo` / `AdminDemo!123`")
+            st.caption("Demo user: `user_demo` / `UserDemo!123`")
+        else:
+            st.caption(f"Signed in as {auth_user['display_name']} ({auth_user['role']})")
+            if st.button("Log out", use_container_width=True):
+                _set_guest_mode()
+                st.session_state.just_reset = True
+                st.rerun()
+        st.caption(f"Persistent record: data/users/{st.session_state.active_user_id}.json")
         _apply_pending_budget_widget_sync()
         c1, c2, c3 = st.columns([1, 2, 1])
         if c1.button("− $10", use_container_width=True):
@@ -544,10 +590,18 @@ def run_app() -> None:
         st.info(st.session_state.ui_notice)
         st.session_state.ui_notice = None
 
-    shop_tab, dashboard_tab, trace_tab = st.tabs(["Shop", "NB DTC Dashboard", "Grounded trace"])
+    can_view_dashboard = st.session_state.auth_user.get("role") == "admin"
+    tab_labels = ["Shop", "Grounded trace"] if not can_view_dashboard else ["Shop", "NB DTC Dashboard", "Grounded trace"]
+    tabs = st.tabs(tab_labels)
+    shop_tab = tabs[0]
     with shop_tab:
         _render_shop_tab(result)
-    with dashboard_tab:
-        _render_dashboard_tab(result)
+    if can_view_dashboard:
+        dashboard_tab = tabs[1]
+        trace_tab = tabs[2]
+        with dashboard_tab:
+            _render_dashboard_tab(result)
+    else:
+        trace_tab = tabs[1]
     with trace_tab:
         _render_trace_tab(result)

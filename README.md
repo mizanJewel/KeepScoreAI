@@ -41,6 +41,33 @@ export OLLAMA_MODEL=gpt-oss:120b-cloud
 
 If the model is unavailable, recommendation ranking still works and the UI falls back to a heuristic explanation.
 
+## Demo accounts
+
+- Admin: `admin_demo` / `AdminDemo!123`
+- User: `user_demo` / `UserDemo!123`
+- Guest: no login required
+
+Only admins can view the `NB DTC Dashboard`. Logged-in users and guests can still use the shopping assistant and grounded trace views.
+
+## Agents and communication
+
+This project is not a multi-agent system.
+
+- Active app-side agent count: `1`
+- Optional external model endpoint: `1` Ollama model connection
+- Internal recommendation/scoring workers: `0` separate agents, these are normal Python modules in the same process
+
+How communication works:
+
+1. The Streamlit UI collects chat input, login state, budget changes, and optional image uploads.
+2. The UI sends that request to `KeepScoreEngine` in `src/keepscore_robust/engine.py`.
+3. The engine calls parsing, state, retrieval, and scoring modules directly in-process.
+4. The engine reads and writes shopper memory from JSON files in `data/users/`.
+5. For natural-language explanation, the engine optionally sends a request to the Ollama endpoint configured by `OLLAMA_HOST` and `OLLAMA_MODEL`.
+6. The Ollama response, or the local heuristic fallback, is returned to the UI and shown to the user.
+
+So in practice, there is one application orchestrator inside the Streamlit app, and one optional external LLM endpoint. The Python modules communicate by direct function calls and shared return values, not by agent-to-agent messaging.
+
 ## Data layout
 
 - `data/products.json`: catalog seed data

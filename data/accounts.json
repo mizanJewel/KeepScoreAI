@@ -1,0 +1,16 @@
+[
+  {
+    "username": "admin_demo",
+    "display_name": "Nadia Admin",
+    "role": "admin",
+    "salt": "nb-admin-salt",
+    "password_hash": "2d54bbf417a3a9af305e050dfc21a68ae86ee797514b90ba9141725156ff1df4"
+  },
+  {
+    "username": "user_demo",
+    "display_name": "Uma User",
+    "role": "user",
+    "salt": "nb-user-salt",
+    "password_hash": "b10b10586f2ec957a6cc8c8d161f951db28dcc5fda8eca8f01de57573f99302b"
+  }
+]
