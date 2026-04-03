@@ -2,5 +2,6 @@
 .venv/
 test/__pycache__/
 src/keepscore_robust/__pycache__/
-tests/__pycache__/
+tests/__pycache__
 data/users/
+src/keepscore_robust/__pycache__
