@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 from keepscore_robust.data import load_products, load_reviews
+from keepscore_robust.image_analysis import analyze_uploaded_shoe_image
 from keepscore_robust.llm import ollama_chat
 from keepscore_robust.models import EngineResult, Product, Recommendation, ShopperProfile
 from keepscore_robust.parsing import parse_turn
@@ -28,6 +29,9 @@ class KeepScoreEngine:
         message: str,
         chat_history: list[dict] | None = None,
         memory_snippets: list[str] | None = None,
+        image_description: str | None = None,
+        image_search_query: str | None = None,
+        image_analysis: dict | None = None,
     ) -> EngineResult:
         candidates = candidate_retrieval(self.products, profile)
         recs = [personalized_score(product, profile) for product in candidates]
@@ -58,6 +62,9 @@ class KeepScoreEngine:
             memory_snippets=memory_snippets,
             llm_model=llm_model,
             llm_error=llm_error,
+            image_description=image_description,
+            image_search_query=image_search_query,
+            image_analysis=image_analysis or {},
         )
 
     def process_turn(
@@ -78,6 +85,36 @@ class KeepScoreEngine:
             message=message,
             chat_history=chat_history,
             memory_snippets=memory_snippets,
+        )
+
+    def process_uploaded_image(
+        self,
+        image_bytes: bytes,
+        filename: str,
+        profile: ShopperProfile | None = None,
+        *,
+        chat_history: list[dict] | None = None,
+        memory_snippets: list[str] | None = None,
+    ) -> EngineResult:
+        profile = profile or self.new_profile()
+        analysis = analyze_uploaded_shoe_image(image_bytes, filename)
+        image_query = str(analysis.get("search_query") or analysis.get("description") or "shoe")
+        parsed = parse_turn(image_query)
+        profile, why_changed = update_profile(profile, parsed)
+        why_changed = [
+            f"Image upload analyzed as: {analysis.get('description', 'shoe image uploaded.')}",
+            *why_changed,
+        ]
+        return self._compute_result(
+            profile,
+            parsed,
+            why_changed,
+            message=f"Image upload: {image_query}",
+            chat_history=chat_history,
+            memory_snippets=memory_snippets,
+            image_description=str(analysis.get("description") or ""),
+            image_search_query=image_query,
+            image_analysis=analysis,
         )
 
     def refresh(

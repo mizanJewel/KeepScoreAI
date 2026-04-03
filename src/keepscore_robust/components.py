@@ -141,6 +141,19 @@ def render_evidence(evidence: dict[str, list[EvidenceItem]]) -> None:
                 st.write(item.text)
 
 
+def render_image_analysis(image_analysis: dict) -> None:
+    if not image_analysis:
+        return
+    st.markdown("### Uploaded shoe analysis")
+    if image_analysis.get("description"):
+        st.write(image_analysis["description"])
+    related = image_analysis.get("related_suggestions") or image_analysis.get("style_tags") or []
+    if related:
+        st.caption("Related suggestions: " + ", ".join(related[:5]))
+    with st.expander("Image analysis trace"):
+        st.json(image_analysis)
+
+
 def render_dashboard_snapshot(metrics: list[dict], summary_bullets: list[str]) -> None:
     cols = st.columns(len(metrics)) if metrics else []
     for idx, metric in enumerate(metrics):

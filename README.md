@@ -18,6 +18,7 @@ A merged and more robust shopping intelligence demo that combines:
 - Streamlit UI with Home, Chat, and Dashboard pages
 - JSON-backed product, review, and shopper-memory storage
 - Ranked recommendations stay heuristic and deterministic, while the response layer can use Ollama for more natural suggestions grounded in review evidence and prior user history
+- Shoe-image upload for visual description, likely matches, and related suggestions
 
 ## Quick start
 
@@ -45,6 +46,15 @@ If the model is unavailable, recommendation ranking still works and the UI falls
 - `data/products.json`: catalog seed data
 - `data/reviews.json`: review evidence seed data
 - `data/users/<shopper-id>.json`: persisted shopper profile, prior chats, and turn summaries for later personalization
+
+## Image upload
+
+Upload a shoe photo from the sidebar and the app will:
+
+- analyze the image with Ollama when the configured model supports image input
+- fall back to heuristic color and filename analysis when vision is unavailable
+- generate a short shoe description
+- turn that visual read into catalog matches and related suggestions
 
 ## Smoke test
 

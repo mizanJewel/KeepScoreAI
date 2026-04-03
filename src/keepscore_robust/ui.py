@@ -9,6 +9,7 @@ from keepscore_robust.components import (
     render_dashboard_snapshot,
     render_evidence,
     render_help_strip,
+    render_image_analysis,
     render_nav,
     render_profile_summary,
     render_recommendation,
@@ -49,6 +50,7 @@ def _load_user_into_state(user_id: str) -> None:
     st.session_state.chat_messages = record.get("chat_messages", [])
     st.session_state.last_result = None
     st.session_state.dashboard_answer = None
+    st.session_state.uploaded_shoe_image = None
 
 
 def _ensure_state() -> None:
@@ -75,6 +77,10 @@ def _ensure_state() -> None:
         ss.dashboard_answer = None
     if "ui_notice" not in ss:
         ss.ui_notice = None
+    if "uploaded_shoe_image" not in ss:
+        ss.uploaded_shoe_image = None
+    if "just_reset" not in ss:
+        ss.just_reset = False
 
 
 def _run_turn(message: str) -> None:
@@ -107,9 +113,44 @@ def _run_turn(message: str) -> None:
         st.session_state.pending_budget_widget_sync = True
 
 
-def _refresh_if_needed() -> EngineResult:
+def _run_image_turn(image_bytes: bytes, filename: str) -> None:
+    engine = st.session_state.engine
+    query = f"shoe image {filename}"
+    record = load_user_record(st.session_state.active_user_id)
+    memory_snippets = retrieve_memory_snippets(record, query)
+    result = engine.process_uploaded_image(
+        image_bytes,
+        filename,
+        st.session_state.profile,
+        chat_history=st.session_state.chat_messages,
+        memory_snippets=memory_snippets,
+    )
+    st.session_state.profile = result.profile
+    st.session_state.last_result = result
+    st.session_state.uploaded_shoe_image = {"bytes": image_bytes, "filename": filename}
+    st.session_state.chat_messages.append({"role": "user", "content": f"Uploaded shoe image: {filename}"})
+    st.session_state.chat_messages.append({"role": "assistant", "content": result.explanation})
+    save_user_record(
+        st.session_state.active_user_id,
+        result.profile,
+        st.session_state.chat_messages,
+        turn_summary={
+            "summary": result.explanation,
+            "user_message": f"Uploaded image: {filename}",
+            "top_product_ids": [rec.product.product_id for rec in result.recommendations[:3]],
+            "why_changed": result.why_changed,
+            "image_analysis": result.image_analysis,
+        },
+    )
+
+
+def _refresh_if_needed() -> EngineResult | None:
+    if st.session_state.just_reset:
+        return None
     result = st.session_state.get("last_result")
     if result is None:
+        if not st.session_state.chat_messages and not st.session_state.profile.history:
+            return None
         record = load_user_record(st.session_state.active_user_id)
         seed_query = st.session_state.chat_messages[-1]["content"] if st.session_state.chat_messages else "refresh"
         result = st.session_state.engine.refresh(
@@ -122,6 +163,8 @@ def _refresh_if_needed() -> EngineResult:
 
 
 def _sync_budget_control() -> None:
+    if st.session_state.just_reset:
+        return
     profile = st.session_state.profile
     budget_target = st.session_state.budget_value
     if profile.budget_max != budget_target:
@@ -148,7 +191,7 @@ def _apply_pending_budget_widget_sync() -> None:
         st.session_state.pending_budget_widget_sync = False
 
 
-def _dashboard_snapshot(result: EngineResult) -> tuple[list[dict], list[str], pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def _dashboard_snapshot(result: EngineResult | None) -> tuple[list[dict], list[str], pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     engine = st.session_state.engine
     profile = st.session_state.profile
     rows = []
@@ -188,21 +231,20 @@ def _dashboard_snapshot(result: EngineResult) -> tuple[list[dict], list[str], pd
     product_df = pd.DataFrame(rows).sort_values(["clicks", "avg_keep_score"], ascending=False)
     risk_df = pd.DataFrame(risk_rows).sort_values(["avg_risk", "avg_keep_score"], ascending=[False, True])
 
-    top_use_cases = build_use_case_mentions(result.recommendations)
+    recommendations = result.recommendations if result else []
+    top_use_cases = build_use_case_mentions(recommendations)
     signal_df = pd.DataFrame(top_use_cases, columns=["use_case", "mentions"]) if top_use_cases else pd.DataFrame(columns=["use_case", "mentions"])
 
     metrics = [
         {"label": "Catalog size", "value": len(engine.products), "delta": None},
-        {"label": "Avg top KeepScore", "value": f"{sum(r.keep_score for r in result.recommendations[:3]) / max(1, min(3, len(result.recommendations))):.1f}", "delta": None},
+        {"label": "Avg top KeepScore", "value": f"{sum(r.keep_score for r in recommendations[:3]) / max(1, min(3, len(recommendations))):.1f}" if recommendations else "0.0", "delta": None},
         {"label": "Risk watchlist", "value": len(risk_df), "delta": None},
         {"label": "Tracked rejections", "value": len(profile.rejected_product_ids), "delta": None},
     ]
 
     summary_bullets = []
-    if result.recommendations:
-        summary_bullets.append(
-            f"Current top recommendation is {result.recommendations[0].product.name} with KeepScore {result.recommendations[0].keep_score:.1f}."
-        )
+    if recommendations:
+        summary_bullets.append(f"Current top recommendation is {recommendations[0].product.name} with KeepScore {recommendations[0].keep_score:.1f}.")
     if profile.transition_reason:
         summary_bullets.append(f"Latest state transition: {profile.transition_reason}.")
     if not signal_df.empty:
@@ -213,7 +255,7 @@ def _dashboard_snapshot(result: EngineResult) -> tuple[list[dict], list[str], pd
     return metrics, summary_bullets, product_df, risk_df, signal_df
 
 
-def _answer_dashboard_prompt(prompt: str, result: EngineResult) -> dict:
+def _answer_dashboard_prompt(prompt: str, result: EngineResult | None) -> dict:
     prompt_l = prompt.lower()
     metrics, summary_bullets, product_df, risk_df, signal_df = _dashboard_snapshot(result)
     bullets: list[str] = []
@@ -268,7 +310,7 @@ def _render_starter_prompts() -> None:
                 st.rerun()
 
 
-def _render_dashboard_prompts(result: EngineResult) -> None:
+def _render_dashboard_prompts(result: EngineResult | None) -> None:
     cols = st.columns(len(DASHBOARD_PROMPTS))
     for idx, prompt in enumerate(DASHBOARD_PROMPTS):
         with cols[idx]:
@@ -306,7 +348,7 @@ def _render_shelf_grid(shelf_name: str, recs: list[Recommendation], *, limit: in
                     st.rerun()
 
 
-def _render_shop_tab(result: EngineResult) -> None:
+def _render_shop_tab(result: EngineResult | None) -> None:
     st.markdown("### Quick starts")
     _render_starter_prompts()
 
@@ -328,15 +370,23 @@ def _render_shop_tab(result: EngineResult) -> None:
 
     with right:
         st.markdown("### Top pick")
-        if result.explanation:
+        if result and result.explanation:
             st.success(result.explanation)
-        if result.llm_model:
+        if result and result.image_analysis:
+            if st.session_state.uploaded_shoe_image:
+                st.image(
+                    st.session_state.uploaded_shoe_image["bytes"],
+                    caption=f"Uploaded shoe: {st.session_state.uploaded_shoe_image['filename']}",
+                    use_container_width=True,
+                )
+            render_image_analysis(result.image_analysis)
+        if result and result.llm_model:
             st.caption(f"Response model: {result.llm_model}")
-        elif result.llm_error:
+        elif result and result.llm_error:
             st.caption("Response model unavailable, using heuristic fallback.")
         with st.expander("Current shopping context", expanded=False):
             render_profile_summary(st.session_state.profile)
-        if result.recommendations:
+        if result and result.recommendations:
             top_rec = result.recommendations[0]
             render_recommendation(top_rec, 1)
             a, b, c = st.columns(3)
@@ -353,14 +403,14 @@ def _render_shop_tab(result: EngineResult) -> None:
             st.info("No top pick is available yet. Try describing your size, use case, or budget.")
 
     st.markdown("### Discovery shelves")
-    top_product_id = result.recommendations[0].product.product_id if result.recommendations else None
+    top_product_id = result.recommendations[0].product.product_id if result and result.recommendations else None
     discovery_limit = max(3, st.session_state.top_k_ui - 1)
-    ranked_discovery = [rec for rec in result.recommendations[1 : 1 + discovery_limit] if rec.product.product_id != top_product_id]
+    ranked_discovery = [rec for rec in (result.recommendations[1 : 1 + discovery_limit] if result else []) if rec.product.product_id != top_product_id]
     if ranked_discovery:
         st.markdown("#### More matches for you")
         _render_shelf_grid("More matches for you", ranked_discovery, limit=discovery_limit)
 
-    for shelf_name, recs in result.shelves.items():
+    for shelf_name, recs in (result.shelves.items() if result else []):
         filtered_recs = []
         seen_product_ids = set()
         for rec in recs:
@@ -373,7 +423,7 @@ def _render_shop_tab(result: EngineResult) -> None:
             _render_shelf_grid(shelf_name, filtered_recs, limit=3)
 
 
-def _render_dashboard_tab(result: EngineResult) -> None:
+def _render_dashboard_tab(result: EngineResult | None) -> None:
     st.markdown("### NB DTC team workspace")
     st.caption(
         "This dashboard tracks shopper intent, risk, and recommendation reliability. "
@@ -395,7 +445,10 @@ def _render_dashboard_tab(result: EngineResult) -> None:
     _render_dashboard_charts(product_df, risk_df, signal_df)
 
 
-def _render_trace_tab(result: EngineResult) -> None:
+def _render_trace_tab(result: EngineResult | None) -> None:
+    if result is None:
+        st.info("No conversation yet. Start a chat or upload a shoe image to see the grounded trace.")
+        return
     st.markdown("### Latest assistant answer")
     st.info(result.explanation)
     with st.expander("Current shopping context", expanded=True):
@@ -408,6 +461,9 @@ def _render_trace_tab(result: EngineResult) -> None:
             "llm_model": result.llm_model,
             "llm_error": result.llm_error,
             "memory_snippets": result.memory_snippets,
+            "image_description": result.image_description,
+            "image_search_query": result.image_search_query,
+            "image_analysis": result.image_analysis,
             "parsed_turn": result.parsed_turn.__dict__,
             "why_changed": result.why_changed,
             "top_recommendations": [
@@ -440,6 +496,13 @@ def run_app() -> None:
             st.session_state.pending_budget_widget_sync = True
             st.rerun()
         st.caption(f"Persistent record: data/users/{st.session_state.active_user_id}.json")
+        uploaded_file = st.file_uploader("Upload a shoe image", type=["png", "jpg", "jpeg", "webp"])
+        if uploaded_file is not None:
+            uploaded_bytes = uploaded_file.getvalue()
+            st.image(uploaded_bytes, caption=uploaded_file.name, use_container_width=True)
+            if st.button("Analyze uploaded shoe", use_container_width=True):
+                _run_image_turn(uploaded_bytes, uploaded_file.name)
+                st.rerun()
         _apply_pending_budget_widget_sync()
         c1, c2, c3 = st.columns([1, 2, 1])
         if c1.button("− $10", use_container_width=True):
@@ -466,10 +529,15 @@ def run_app() -> None:
             _load_user_into_state(st.session_state.active_user_id)
             st.session_state.budget_value = 130
             st.session_state.pending_budget_widget_sync = True
+            st.session_state.uploaded_shoe_image = None
+            st.session_state.just_reset = True
             st.rerun()
 
-    _sync_budget_control()
+    if not st.session_state.just_reset:
+        _sync_budget_control()
     result = _refresh_if_needed()
+    if st.session_state.just_reset:
+        st.session_state.just_reset = False
     render_nav()
     render_help_strip()
     if st.session_state.get("ui_notice"):

@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from io import BytesIO
+
+from PIL import Image
+
 from keepscore_robust.engine import KeepScoreEngine
 from keepscore_robust.memory import load_user_record, profile_from_record, reset_user_record, save_user_record
 
@@ -41,6 +45,14 @@ def main() -> None:
     assert restored.gender == "men", "stored profile should persist gender"
     assert record["chat_messages"], "stored chat history should persist"
 
+    image = Image.new("RGB", (48, 24), color=(20, 20, 20))
+    buffer = BytesIO()
+    image.save(buffer, format="PNG")
+    image_result = engine.process_uploaded_image(buffer.getvalue(), "black-running-shoe.png", second.profile)
+    assert image_result.image_analysis, "image upload should produce analysis"
+    assert image_result.image_description, "image upload should produce a description"
+    assert image_result.recommendations, "image upload should still produce matches"
+
     print("First top recommendation:", first_top)
     print("Second top recommendation:", second_top)
     print("Stored gender:", second.profile.gender)
@@ -48,6 +60,7 @@ def main() -> None:
     print("Why changed:", second.why_changed)
     print("Explanation:", second.explanation)
     print("LLM model:", second.llm_model or "heuristic fallback")
+    print("Image description:", image_result.image_description)
 
 
 if __name__ == "__main__":

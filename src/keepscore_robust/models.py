@@ -124,3 +124,6 @@ class EngineResult:
     memory_snippets: list[str] = field(default_factory=list)
     llm_model: str | None = None
     llm_error: str | None = None
+    image_description: str | None = None
+    image_search_query: str | None = None
+    image_analysis: dict[str, Any] = field(default_factory=dict)

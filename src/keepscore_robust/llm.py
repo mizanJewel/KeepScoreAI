@@ -10,7 +10,7 @@ DEFAULT_OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434").rs
 DEFAULT_OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gpt-oss:120b-cloud")
 
 
-def ollama_chat(messages: list[dict[str, str]], *, timeout: float = 20.0) -> dict[str, Any]:
+def ollama_chat(messages: list[dict[str, Any]], *, timeout: float = 20.0) -> dict[str, Any]:
     payload = {
         "model": DEFAULT_OLLAMA_MODEL,
         "messages": messages,
