@@ -59,6 +59,7 @@ def _set_guest_mode() -> None:
     _load_user_into_state("guest")
     st.session_state.budget_value = int(st.session_state.profile.budget_max or 130)
     st.session_state.pending_budget_widget_sync = True
+    st.session_state.ui_notice = None
 
 
 def _login(username: str, password: str) -> bool:
@@ -71,6 +72,7 @@ def _login(username: str, password: str) -> bool:
     st.session_state.pending_budget_widget_sync = True
     st.session_state.login_username = account["username"]
     st.session_state.login_password = ""
+    st.session_state.ui_notice = None
     return True
 
 
@@ -231,8 +233,12 @@ def _dashboard_snapshot(result: EngineResult | None) -> tuple[list[dict], list[s
             {
                 "product_name": product.name,
                 "category": product.category,
+                "sale_price": round(product.sale_price, 2),
                 "clicks": round(product.click_through_rate * 1000, 1),
                 "impressions": int(product.review_count * 8 + product.wishlist_count),
+                "conversion_rate": round(product.conversion_rate, 4),
+                "add_to_cart_rate": round(product.add_to_cart_rate, 4),
+                "wishlist_count": int(product.wishlist_count),
                 "avg_keep_score": round(rec.keep_score, 1),
                 "avg_risk": round(rec.return_risk, 3),
                 "trend_score": round(trend, 1),
@@ -255,6 +261,16 @@ def _dashboard_snapshot(result: EngineResult | None) -> tuple[list[dict], list[s
 
     product_df = pd.DataFrame(rows).sort_values(["clicks", "avg_keep_score"], ascending=False)
     risk_df = pd.DataFrame(risk_rows).sort_values(["avg_risk", "avg_keep_score"], ascending=[False, True])
+    if not product_df.empty:
+        product_df["views"] = product_df["impressions"]
+        product_df["cart_adds"] = (product_df["views"] * product_df["add_to_cart_rate"]).round().astype(int)
+        product_df["checkouts"] = (product_df["cart_adds"] * 0.72).round().astype(int)
+        product_df["purchases"] = (product_df["views"] * product_df["conversion_rate"]).round().astype(int)
+        product_df["revenue_proxy"] = (product_df["purchases"] * product_df["sale_price"]).round(2)
+        product_df["wishlist_to_purchase_rate"] = (
+            product_df["purchases"] / product_df["wishlist_count"].clip(lower=1)
+        ).round(3)
+        product_df["return_units"] = (product_df["purchases"] * product_df["avg_risk"]).round().astype(int)
 
     recommendations = result.recommendations if result else []
     top_use_cases = build_use_case_mentions(recommendations)
@@ -263,6 +279,7 @@ def _dashboard_snapshot(result: EngineResult | None) -> tuple[list[dict], list[s
     metrics = [
         {"label": "Catalog size", "value": len(engine.products), "delta": None},
         {"label": "Avg top KeepScore", "value": f"{sum(r.keep_score for r in recommendations[:3]) / max(1, min(3, len(recommendations))):.1f}" if recommendations else "0.0", "delta": None},
+        {"label": "Revenue proxy", "value": f"${product_df['revenue_proxy'].sum():,.0f}" if not product_df.empty else "$0", "delta": None},
         {"label": "Risk watchlist", "value": len(risk_df), "delta": None},
         {"label": "Tracked rejections", "value": len(profile.rejected_product_ids), "delta": None},
     ]
@@ -270,6 +287,10 @@ def _dashboard_snapshot(result: EngineResult | None) -> tuple[list[dict], list[s
     summary_bullets = []
     if recommendations:
         summary_bullets.append(f"Current top recommendation is {recommendations[0].product.name} with KeepScore {recommendations[0].keep_score:.1f}.")
+    if not product_df.empty:
+        summary_bullets.append(
+            f"Highest revenue proxy product is {product_df.sort_values('revenue_proxy', ascending=False).iloc[0]['product_name']}."
+        )
     if profile.transition_reason:
         summary_bullets.append(f"Latest state transition: {profile.transition_reason}.")
     if not signal_df.empty:
@@ -345,19 +366,72 @@ def _render_dashboard_prompts(result: EngineResult | None) -> None:
 
 
 def _render_dashboard_charts(product_df: pd.DataFrame, risk_df: pd.DataFrame, signal_df: pd.DataFrame) -> None:
-    c1, c2 = st.columns(2, gap="large")
-    with c1:
-        st.markdown("#### Most engaged products")
-        if not product_df.empty:
-            st.bar_chart(product_df.set_index("product_name")["clicks"])
-    with c2:
-        st.markdown("#### Risk watchlist")
-        if not risk_df.empty:
-            scatter = risk_df.rename(columns={"avg_risk": "x", "avg_keep_score": "y"})
-            st.scatter_chart(scatter, x="x", y="y", size="impressions")
+    if product_df.empty:
+        st.info("Dashboard charts will appear after product performance data is available.")
+        return
+
+    category_df = (
+        product_df.groupby("category", as_index=False)
+        .agg(
+            revenue_proxy=("revenue_proxy", "sum"),
+            purchases=("purchases", "sum"),
+            views=("views", "sum"),
+            conversion_rate=("conversion_rate", "mean"),
+        )
+        .sort_values("revenue_proxy", ascending=False)
+    )
+    funnel_df = pd.DataFrame(
+        {
+            "stage": ["Views", "Cart Adds", "Checkouts", "Purchases"],
+            "count": [
+                int(product_df["views"].sum()),
+                int(product_df["cart_adds"].sum()),
+                int(product_df["checkouts"].sum()),
+                int(product_df["purchases"].sum()),
+            ],
+        }
+    )
+    top_revenue_df = product_df.sort_values("revenue_proxy", ascending=False).head(8)
+    top_wishlist_df = product_df.sort_values("wishlist_count", ascending=False).head(8)
+    return_rate_df = product_df.sort_values("avg_risk", ascending=False).head(8)
+
+    row1_col1, row1_col2 = st.columns(2, gap="large")
+    with row1_col1:
+        st.markdown("#### Revenue by Category")
+        st.caption("Revenue values are proxy estimates derived from price and conversion behavior.")
+        st.bar_chart(category_df.set_index("category")["revenue_proxy"])
+    with row1_col2:
+        st.markdown("#### Conversion Funnel (Views to Cart to Checkout to Purchase)")
+        st.bar_chart(funnel_df.set_index("stage")["count"])
+
+    row2_col1, row2_col2 = st.columns(2, gap="large")
+    with row2_col1:
+        st.markdown("#### Top Products by Revenue")
+        st.bar_chart(top_revenue_df.set_index("product_name")["revenue_proxy"])
+    with row2_col2:
+        st.markdown("#### Conversion Rate by Category")
+        st.bar_chart(category_df.set_index("category")["conversion_rate"])
+
+    row3_col1, row3_col2 = st.columns(2, gap="large")
+    with row3_col1:
+        st.markdown("#### Product Views vs Purchases Scatter")
+        scatter_df = product_df.rename(columns={"views": "x", "purchases": "y", "revenue_proxy": "size"})
+        st.scatter_chart(scatter_df, x="x", y="y", size="size", color="category")
+    with row3_col2:
+        st.markdown("#### Return Rate by Product")
+        st.bar_chart(return_rate_df.set_index("product_name")["avg_risk"])
+
+    row4_col1, row4_col2 = st.columns(2, gap="large")
+    with row4_col1:
+        st.markdown("#### Top Products by Wishlist")
+        st.bar_chart(top_wishlist_df.set_index("product_name")["wishlist_count"])
+    with row4_col2:
+        st.markdown("#### Wishlist to Purchase Conversion Rate")
+        wishlist_conversion_df = product_df.sort_values("wishlist_to_purchase_rate", ascending=False).head(8)
+        st.bar_chart(wishlist_conversion_df.set_index("product_name")["wishlist_to_purchase_rate"])
 
     if not signal_df.empty:
-        st.markdown("#### Top shopper missions")
+        st.markdown("#### Popular Shopper Missions")
         st.bar_chart(signal_df.set_index("use_case")["mentions"])
 
 
@@ -529,14 +603,16 @@ def run_app() -> None:
         st.subheader("Account")
         auth_user = st.session_state.auth_user
         if auth_user["role"] == "guest":
-            login_username = st.text_input("Username", key="login_username")
-            login_password = st.text_input("Password", type="password", key="login_password")
-            login_col, guest_col = st.columns(2)
-            if login_col.button("Log in", use_container_width=True):
-                if _login(login_username, login_password):
+            with st.form("login_form", clear_on_submit=False):
+                st.text_input("Username", key="login_username")
+                st.text_input("Password", type="password", key="login_password")
+                submitted = st.form_submit_button("Log in", use_container_width=True)
+            guest_mode = st.button("Continue as guest", use_container_width=True)
+            if submitted:
+                if _login(st.session_state.login_username, st.session_state.login_password):
                     st.rerun()
                 st.session_state.ui_notice = "Login failed. Check the demo username and password."
-            if guest_col.button("Continue as guest", use_container_width=True):
+            if guest_mode:
                 _set_guest_mode()
                 st.rerun()
             st.caption("Guest access can browse the storefront, but the NB DTC Dashboard is admin-only.")
